@@ -4,6 +4,7 @@ import 'babel-register';
 import 'babel-polyfill';
 
 import Exporter from '../src/exporter';
+import { checksum } from '../src/helpers';
 
 test('Exporter class exists', t => {
   t.truthy(new Exporter instanceof Exporter, 'Exporter is constructor');
@@ -43,4 +44,31 @@ test('Exporter.save', t => {
   t.truthy(flagsKeys.includes('zip.file(1)'), 'should save media with two files');
   t.truthy(flagsKeys.includes('zip.generateAsync'), 'should call zip.generateAsync');
   t.truthy(['blob', 'nodebuffer'].includes(flags['zip.generateAsync'].type), 'zip generates binary file');
+});
+
+test('Exporter.addCard', t => {
+  const exporter = new Exporter({}, {});
+
+  t.is(typeof exporter.addCard, 'function', 'should be a function');
+  const { topDeckId, topModelId, separator } = exporter;
+  const [front, back] = [5, 9, '!separator!', 'Test Front', 'Test back'];
+  const results = {};
+  exporter.update = (query, data) => results[query] = data;
+  exporter.addCard(front, back);
+
+  const keys = Object.keys(results);
+  const notesUpdate = results[`insert into notes values(:id,:guid,:mid,:mod,:usn,:tags,:flds,:sfld,:csum,:flags,:data)`];
+  const cardsUpdate = results[`insert into cards values(:id,:nid,:did,:ord,:mod,:usn,:type,:queue,:due,:ivl,:factor,:reps,:lapses,:left,:odue,:odid,:flags,:data)`];
+
+  t.is(keys.length, 2, 'should made two requests');
+
+  t.truthy(cardsUpdate,'should insert card');
+  t.is(notesUpdate[':sfld'], front);
+  t.is(notesUpdate[':flds'], front + separator + back);
+  t.is(notesUpdate[':mid'], topModelId);
+  t.is(notesUpdate[':csum'], checksum(front + separator + back));
+
+  t.truthy(cardsUpdate,'should insert note');
+  t.is(cardsUpdate[':did'], topDeckId);
+  t.is(cardsUpdate[':nid'], notesUpdate[':id'], 'should link both tables via the same note_id');
 });
