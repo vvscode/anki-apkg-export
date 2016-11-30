@@ -16,32 +16,17 @@ export const SEPARATOR = '\u001F';
 
 export default function(deckName) {
   const db = getDb();
+  const zip = getZip();
   const media = getMedia();
+  const mediaContent = media.getContent();
   const top_deck_id = rand();
   const top_model_id = rand();
 
   const update = (query, obj) => db.prepare(query).getAsObject(obj);
   const getFirstVal = query => JSON.parse(db.exec(query)[0].values[0]);
-  /**
-   * @param front
-   * @param back
-   */
-  const addCard = getAddCard(
-    update,
-    top_deck_id,
-    top_model_id,
-    SEPARATOR
-  );
-  /**
-   * Save db into file
-   * @param options
-   * @returns {*}
-   */
-  const save = getSave(
-    getZip(),
-    db,
-    media.getContent()
-  );
+
+  const addCard = getAddCard(update, top_deck_id, top_model_id, SEPARATOR);
+  const save = getSave(zip, db, mediaContent);
 
   db.run(getTemplate());
 
