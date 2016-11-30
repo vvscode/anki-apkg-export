@@ -10,8 +10,6 @@ import {
   getCssTemplate,
   getDb,
   getLastItem,
-  getMedia,
-  getSave,
   getSql,
   getTemplate,
   getZip,
@@ -113,53 +111,4 @@ test('getZip', t => {
   t.truthy(typeof zip === 'object' && !!zip, 'should be an object');
   t.is(typeof zip.file, 'function', 'zip should contains file method');
   t.is(typeof zip.generateAsync, 'function', 'zip should contains generateAsync method');
-});
-
-test('getSave', t => {
-  t.plan(9);
-  t.is(typeof getSave, 'function', 'should be a function');
-  t.is(typeof getSave(), 'function', 'should return a function');
-
-  const flags = {};
-  const dbMock = { export: () => flags['db.export'] = 'Some data' };
-  const zipMock = {
-    file: (path, content) => flags[`zip.file(${path})`] = content,
-    generateAsync: options => flags[`zip.generateAsync`] = options
-  };
-  const mediaMock = [];
-  const save = getSave(zipMock, dbMock, mediaMock);
-
-  // it should process media by reference
-  mediaMock.push({filename: '1.jpg'}, {filename: '2.bmp'});
-
-  save({some: 'options', should: { be: 'here'}});
-  const flagsKeys = Object.keys(flags);
-  t.truthy(flagsKeys.includes('db.export'), 'should call .export on db');
-  t.truthy(flagsKeys.includes('zip.file(collection.anki2)'), 'should save notes/cards db');
-  t.truthy(flagsKeys.includes('zip.file(media)'), 'should save media');
-  t.truthy(flagsKeys.includes('zip.file(0)'), 'should save media with two files');
-  t.truthy(flagsKeys.includes('zip.file(1)'), 'should save media with two files');
-  t.truthy(flagsKeys.includes('zip.generateAsync'), 'should call zip.generateAsync');
-  t.truthy(['blob', 'nodebuffer'].includes(flags['zip.generateAsync'].type), 'zip generates binary file');
-});
-
-test('getMedia', t => {
-  t.plan(10);
-  t.is(typeof getMedia, 'function', 'should be a function');
-
-  const media = getMedia();
-  t.truthy(typeof media === 'object' && !!media, 'should be an object');
-  t.is(typeof media.getContent, 'function');
-  t.is(typeof media.addMedia, 'function');
-  t.truthy(media.getContent() instanceof Array);
-
-  t.truthy(getMedia() !== getMedia(), 'should return new object each time');
-  t.truthy(getMedia().getContent() !== getMedia().getContent(), 'content should be different each time');
-
-  const  { addMedia } = media; // it will be called with untethered context
-  t.deepEqual(media.getContent(), []);
-  addMedia('some.file', 'data');
-  t.deepEqual(media.getContent(), [{ filename: 'some.file', data: 'data' }]);
-  addMedia('another.file', 'new data');
-  t.deepEqual(media.getContent(), [{ filename: 'some.file', data: 'data' }, { filename: 'another.file', data: 'new data' }]);
 });
