@@ -6,7 +6,6 @@ import 'babel-register';
 import 'babel-polyfill';
 import {
   checksum,
-  getAddCard,
   getCssTemplate,
   getDb,
   getLastItem,
@@ -75,7 +74,7 @@ test('getDb', t => {
   t.is(typeof db.export, 'function', 'db should contains run method');
 });
 
-test('getAddCard', t => {
+/*test('getAddCard', t => {
   t.plan(11);
   t.is(typeof getAddCard, 'function', 'should be a function');
   t.is(typeof getAddCard(), 'function', 'should return a function');
@@ -101,7 +100,7 @@ test('getAddCard', t => {
   t.truthy(cardsUpdate,'should insert note');
   t.is(cardsUpdate[':did'], topDeckId);
   t.is(cardsUpdate[':nid'], notesUpdate[':id'], 'should link both tables via the same note_id');
-});
+});*/
 
 test('getZip', t => {
   t.plan(4);
